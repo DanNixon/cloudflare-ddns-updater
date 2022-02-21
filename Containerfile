@@ -5,17 +5,20 @@ RUN apk add \
   openssl-dev
 
 COPY . .
-RUN cargo install \
+RUN RUSTFLAGS=-Ctarget-feature=-crt-static cargo install \
   --path . \
   --root /usr/local
 
 FROM docker.io/library/alpine:3.15
+
+RUN apk add \
+  libgcc
 
 COPY --from=builder \
   /usr/local/bin/cloudflare-ddns-updater \
   /usr/local/bin/cloudflare-ddns-updater
 
 RUN mkdir /config
-WORKDIR /config
 
 ENTRYPOINT ["/usr/local/bin/cloudflare-ddns-updater"]
+CMD ["--config", "/config/config.toml"]
