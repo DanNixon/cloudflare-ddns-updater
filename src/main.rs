@@ -31,8 +31,16 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
     let config: Config = toml::from_str(&fs::read_to_string(args.config)?)?;
+    info! {"{} records are configured to be monitored", config.cloudflare.records.iter().count()};
 
-    let matrix_client = matrix::login(&config.matrix).await?;
+    let matrix_client = match matrix::login(&config.matrix).await {
+        Ok(c) => Some(c),
+        Err(e) => {
+            error! {"Failed logging into Matrix: {}", e};
+            info! {"Will continue without Matrix notifications"};
+            None
+        }
+    };
 
     debug! {"Getting public IP..."};
     let ip = match public_ip::addr_v4()
@@ -42,22 +50,26 @@ async fn main() -> Result<()> {
         Ok(ip) => {
             info! {"Detected public IP: {:?}", ip};
             if config.matrix.verbose {
-                matrix::send_message(
-                    &config.matrix,
-                    &matrix_client,
-                    format! {"Public IP: {}", ip}.as_str(),
-                )
-                .await?;
+                if let Some(ref matrix_client) = matrix_client {
+                    let _ = matrix::send_message(
+                        &config.matrix,
+                        &matrix_client,
+                        format! {"Public IP: {}", ip}.as_str(),
+                    )
+                    .await;
+                }
             }
             Ok(ip)
         }
         Err(e) => {
-            matrix::send_message(
-                &config.matrix,
-                &matrix_client,
-                format! {"Error: {}", e}.as_str(),
-            )
-            .await?;
+            if let Some(ref matrix_client) = matrix_client {
+                let _ = matrix::send_message(
+                    &config.matrix,
+                    &matrix_client,
+                    format! {"Error: {}", e}.as_str(),
+                )
+                .await;
+            }
             Err(e)
         }
     }?;
@@ -75,21 +87,24 @@ async fn main() -> Result<()> {
     {
         results.push(c.run(&client, &ip).await)
     }
+    info! {"{} update(s) performed", results.iter().count()};
 
-    for result in &results {
-        match result {
-            Ok(message) => {
-                info! {"{}", message};
-                matrix::send_message(&config.matrix, &matrix_client, message.as_str()).await?;
-            }
-            Err(e) => {
-                error! {"{}", e};
-                matrix::send_message(
-                    &config.matrix,
-                    &matrix_client,
-                    format! {"Error: {}", e}.as_str(),
-                )
-                .await?;
+    if let Some(ref matrix_client) = matrix_client {
+        for result in &results {
+            match result {
+                Ok(message) => {
+                    info! {"{}", message};
+                    matrix::send_message(&config.matrix, &matrix_client, message.as_str()).await?;
+                }
+                Err(e) => {
+                    error! {"{}", e};
+                    matrix::send_message(
+                        &config.matrix,
+                        &matrix_client,
+                        format! {"Error: {}", e}.as_str(),
+                    )
+                    .await?;
+                }
             }
         }
     }
