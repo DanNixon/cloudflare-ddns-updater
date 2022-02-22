@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
     let config: Config = toml::from_str(&fs::read_to_string(args.config)?)?;
-    info! {"{} records are configured to be monitored", config.cloudflare.records.iter().count()};
+    info! {"{} records are configured to be monitored", config.cloudflare.records.len()};
 
     let matrix_client = match matrix::login(&config.matrix).await {
         Ok(c) => Some(c),
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
                 if let Some(ref matrix_client) = matrix_client {
                     let _ = matrix::send_message(
                         &config.matrix,
-                        &matrix_client,
+                        matrix_client,
                         format! {"Public IP: {}", ip}.as_str(),
                     )
                     .await;
@@ -65,7 +65,7 @@ async fn main() -> Result<()> {
             if let Some(ref matrix_client) = matrix_client {
                 let _ = matrix::send_message(
                     &config.matrix,
-                    &matrix_client,
+                    matrix_client,
                     format! {"Error: {}", e}.as_str(),
                 )
                 .await;
@@ -87,20 +87,20 @@ async fn main() -> Result<()> {
     {
         results.push(c.run(&client, &ip).await)
     }
-    info! {"{} update(s) performed", results.iter().count()};
+    info! {"{} update(s) performed", results.len()};
 
     if let Some(ref matrix_client) = matrix_client {
         for result in &results {
             match result {
                 Ok(message) => {
                     info! {"{}", message};
-                    matrix::send_message(&config.matrix, &matrix_client, message.as_str()).await?;
+                    matrix::send_message(&config.matrix, matrix_client, message.as_str()).await?;
                 }
                 Err(e) => {
                     error! {"{}", e};
                     matrix::send_message(
                         &config.matrix,
-                        &matrix_client,
+                        matrix_client,
                         format! {"Error: {}", e}.as_str(),
                     )
                     .await?;
