@@ -33,3 +33,5 @@ password = "super_secret"
 room_id = "!someroom:somewhere.org"
 verbose = false
 ```
+
+The Cloudflare API token should have only the DNS Edit permission for only the zones you want to update.
