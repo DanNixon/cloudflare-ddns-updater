@@ -4,7 +4,8 @@ RUN apk add \
   libc-dev \
   openssl-dev
 
-COPY . .
+ADD Cargo.toml Cargo.lock .
+ADD src ./src
 RUN RUSTFLAGS=-Ctarget-feature=-crt-static cargo install \
   --path . \
   --root /usr/local
@@ -12,6 +13,7 @@ RUN RUSTFLAGS=-Ctarget-feature=-crt-static cargo install \
 FROM docker.io/library/alpine:3.15
 
 RUN apk add \
+  tini \
   libgcc
 
 COPY --from=builder \
@@ -20,5 +22,5 @@ COPY --from=builder \
 
 RUN mkdir /config
 
-ENTRYPOINT ["/usr/local/bin/cloudflare-ddns-updater"]
-CMD ["--config", "/config/config.toml"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/usr/local/bin/cloudflare-ddns-updater", "--config", "/config/config.toml"]
