@@ -3,7 +3,6 @@ mod matrix;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use log::{debug, error, info};
 use serde::Deserialize;
 use std::fs;
 
@@ -31,30 +30,33 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
     let config: Config = toml::from_str(&fs::read_to_string(args.config)?)?;
-    info! {"{} records are configured to be monitored", config.cloudflare.records.len()};
+    log::info!(
+        "{} records are configured to be monitored",
+        config.cloudflare.records.len()
+    );
 
     let matrix_client = match matrix::login(&config.matrix).await {
         Ok(c) => Some(c),
         Err(e) => {
-            error! {"Failed logging into Matrix: {}", e};
-            info! {"Will continue without Matrix notifications"};
+            log::error!("Failed logging into Matrix: {}", e);
+            log::info!("Will continue without Matrix notifications");
             None
         }
     };
 
-    debug! {"Getting public IP..."};
+    log::debug!("Getting public IP...");
     let ip = match public_ip::addr_v4()
         .await
-        .ok_or(anyhow! {"Failed to get public IP"})
+        .ok_or_else(|| anyhow!("Failed to get public IP"))
     {
         Ok(ip) => {
-            info! {"Detected public IP: {:?}", ip};
+            log::info!("Detected public IP: {:?}", ip);
             if config.matrix.verbose {
                 if let Some(ref matrix_client) = matrix_client {
                     let _ = matrix::send_message(
                         &config.matrix,
                         matrix_client,
-                        format! {"Public IP: {}", ip}.as_str(),
+                        format!("Public IP: {}", ip).as_str(),
                     )
                     .await;
                 }
@@ -66,7 +68,7 @@ async fn main() -> Result<()> {
                 let _ = matrix::send_message(
                     &config.matrix,
                     matrix_client,
-                    format! {"Error: {}", e}.as_str(),
+                    format!("Error: {}", e).as_str(),
                 )
                 .await;
             }
@@ -82,26 +84,25 @@ async fn main() -> Result<()> {
         .cloudflare
         .records
         .into_iter()
-        .map(|r| cloudflare::Task::new(&ip, &zones, &r))
-        .flatten()
+        .filter_map(|r| cloudflare::Task::new(&ip, &zones, &r))
     {
         results.push(c.run(&client, &ip).await)
     }
-    info! {"{} update(s) performed", results.len()};
+    log::info!("{} update(s) performed", results.len());
 
     if let Some(ref matrix_client) = matrix_client {
         for result in &results {
             match result {
                 Ok(message) => {
-                    info! {"{}", message};
+                    log::info!("{}", message);
                     matrix::send_message(&config.matrix, matrix_client, message.as_str()).await?;
                 }
                 Err(e) => {
-                    error! {"{}", e};
+                    log::error!("{}", e);
                     matrix::send_message(
                         &config.matrix,
                         matrix_client,
-                        format! {"Error: {}", e}.as_str(),
+                        format!("Error: {}", e).as_str(),
                     )
                     .await?;
                 }
@@ -111,6 +112,6 @@ async fn main() -> Result<()> {
 
     match results.iter().filter(|&r| r.is_err()).count() {
         0 => Ok(()),
-        a => Err(anyhow! {"{} update(s) have failed", a}),
+        a => Err(anyhow!("{} update(s) have failed", a)),
     }
 }

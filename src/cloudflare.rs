@@ -11,7 +11,6 @@ use cloudflare::{
         Environment, HttpApiClientConfig,
     },
 };
-use log::warn;
 use serde::Deserialize;
 use std::net::Ipv4Addr;
 
@@ -102,7 +101,7 @@ impl Task {
                         })
                     }
                 } else {
-                    warn! {"Matched a record, but it was not an A record as expected"}
+                    log::warn!("Matched a record, but it was not an A record as expected");
                     None
                 }
             }
@@ -129,7 +128,7 @@ impl Task {
                     })
                     .await
                 {
-                    Ok(_) => Ok(format! {"Created record: {}", &name}),
+                    Ok(_) => Ok(format!("Created record: {}", &name)),
                     Err(e) => Err(Error::new(e)),
                 }
             }
@@ -147,7 +146,7 @@ impl Task {
                     })
                     .await
                 {
-                    Ok(_) => Ok(format! {"Updated record: {}", &name}),
+                    Ok(_) => Ok(format!("Updated record: {}", &name)),
                     Err(e) => Err(Error::new(e)),
                 }
             }

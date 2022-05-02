@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use log::{debug, info};
 use matrix_sdk::{
     ruma::{
         events::{room::message::MessageEventContent, AnyMessageEventContent},
@@ -19,7 +18,7 @@ pub(crate) struct MatrixConfig {
 }
 
 pub(crate) async fn login(config: &MatrixConfig) -> Result<Client> {
-    debug! {"Logging in to Matrix..."}
+    log::debug!("Logging in to Matrix...");
 
     let user = UserId::try_from(config.username.clone())?;
     let client = Client::new_from_user_id(user.clone()).await?;
@@ -29,14 +28,14 @@ pub(crate) async fn login(config: &MatrixConfig) -> Result<Client> {
 
     client.sync_once(SyncSettings::new()).await?;
 
-    info! {"Logged in to Matrix"};
+    log::info!("Logged in to Matrix");
     Ok(client)
 }
 
 pub(crate) async fn send_message(config: &MatrixConfig, client: &Client, msg: &str) -> Result<()> {
     let room = RoomId::try_from(config.room_id.clone())?;
 
-    debug! {"Sending message..."}
+    log::debug!("Sending message...");
     client
         .get_joined_room(&room)
         .unwrap()
@@ -50,10 +49,10 @@ pub(crate) async fn send_message(config: &MatrixConfig, client: &Client, msg: &s
         client
             .sync_token()
             .await
-            .ok_or(anyhow! {"Could not get sync token"})?,
+            .ok_or_else(|| anyhow!("Could not get sync token"))?,
     );
     client.sync_once(settings).await?;
 
-    debug! {"Message sent"}
+    log::debug!("Message sent");
     Ok(())
 }
