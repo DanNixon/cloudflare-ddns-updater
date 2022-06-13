@@ -4,15 +4,15 @@ mod matrix;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use serde::Deserialize;
-use std::fs;
+use std::{fs, path::PathBuf};
 
 /// Tool to keep Cloudflare DNS records up to date with a dynamic/residential IP address.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Config file to load
-    #[clap(short, long)]
-    config: String,
+    #[clap(short, long, value_parser)]
+    config: PathBuf,
 }
 
 #[derive(Deserialize, Debug)]
