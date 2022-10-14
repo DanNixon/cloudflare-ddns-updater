@@ -1,4 +1,7 @@
-# Cloudflare DDNS updater [![CI](https://github.com/DanNixon/cloudflare-ddns-updater/actions/workflows/ci.yml/badge.svg)](https://github.com/DanNixon/cloudflare-ddns-updater/actions/workflows/ci.yml)
+# Cloudflare DDNS updater
+
+[![CI](https://github.com/DanNixon/cloudflare-ddns-updater/actions/workflows/ci.yml/badge.svg)](https://github.com/DanNixon/cloudflare-ddns-updater/actions/workflows/ci.yml)
+[![dependency status](https://deps.rs/repo/github/dannixon/cloudflare-ddns-updater/status.svg)](https://deps.rs/repo/github/dannixon/cloudflare-ddns-updater)
 
 Tool to keep Cloudflare DNS records up to date with a dynamic/residential IP address.
 
