@@ -10,7 +10,6 @@ As such it is very opinionated in several ways:
 
 - you must be using Cloudflare
 - you must only care about IPv4
-- you must receive notifications via Matrix
 
 TL;DR: probably don't use this.
 
@@ -29,12 +28,6 @@ name = "something.dan-nixon.com"
 [[cloudflare.records]]
 zone_id = "id"
 name = "something-else.dan-nixon.com"
-
-[matrix]
-username = "@someone:somewhere.org"
-password = "super_secret"
-room_id = "!someroom:somewhere.org"
-verbose = false
 ```
 
 The Cloudflare API token should have only the DNS Edit permission for only the zones you want to update.
