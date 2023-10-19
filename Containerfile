@@ -1,4 +1,4 @@
-FROM docker.io/library/rust:alpine3.15 as builder
+FROM docker.io/library/rust:alpine3.18 as builder
 
 RUN apk add \
   libc-dev \
@@ -10,7 +10,7 @@ RUN RUSTFLAGS=-Ctarget-feature=-crt-static cargo install \
   --path . \
   --root /usr/local
 
-FROM docker.io/library/alpine:3.15
+FROM docker.io/library/alpine:3.18
 
 RUN apk add \
   tini \
