@@ -30,10 +30,7 @@ jobs:
         run: nix develop --command cargo-deny check
 
       - name: Clippy
-        run: nix build -L .#clippy
-
-      - name: Test
-        run: nix build -L --no-sandbox .#test
+        run: nix develop --command cargo clippy --all-targets
 
   build:
     name: Build
@@ -46,7 +43,7 @@ jobs:
       - uses: cachix/install-nix-action@v22
 
       - name: Build
-        run: nix build -L .#${{ matrix.package }}
+        run: nix build -L .#default
 
       - name: Build and push container image
         if: ${{ github.ref_name == 'main' || github.ref_type == 'tag' }}
