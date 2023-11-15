@@ -42,16 +42,26 @@
         cargo = builtins.fromTOML (builtins.readFile ./Cargo.toml);
         name = cargo.package.name;
         version = cargo.package.version;
+
+        lintingRustFlags = "-D unused-crate-dependencies";
       in {
         devShell = pkgs.mkShell {
           packages = with pkgs; [
+            # Rust toolchain
             toolchain.toolchain
 
+            # Code formatting tools
             alejandra
             treefmt
 
+            # Dependency audit tool
             cargo-deny
+
+            # Container image management
+            skopeo
           ];
+
+          RUSTFLAGS = lintingRustFlags;
         };
 
         packages = rec {
@@ -79,19 +89,6 @@
                 "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
               ];
             };
-          };
-
-          clippy = naersk'.buildPackage {
-            src = ./.;
-            mode = "clippy";
-          };
-
-          test = naersk'.buildPackage {
-            src = ./.;
-            mode = "test";
-
-            # Ensure detailed test output appears in nix build log
-            cargoTestOptions = x: x ++ ["1>&2"];
           };
         };
       }
