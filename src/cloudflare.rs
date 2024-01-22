@@ -5,10 +5,8 @@ use cloudflare::{
         ListDnsRecordsParams, UpdateDnsRecord, UpdateDnsRecordParams,
     },
     framework::{
-        async_api::{ApiClient, Client},
-        auth::Credentials,
-        response::ApiSuccess,
-        Environment, HttpApiClientConfig,
+        async_api::Client, auth::Credentials, response::ApiSuccess, Environment,
+        HttpApiClientConfig,
     },
 };
 use serde::Deserialize;
@@ -27,13 +25,13 @@ pub(crate) struct CloudflareConfig {
 }
 
 pub(crate) fn new_client(config: &CloudflareConfig) -> Result<Client> {
-    Client::new(
+    Ok(Client::new(
         Credentials::UserAuthToken {
             token: config.token.clone(),
         },
         HttpApiClientConfig::default(),
         Environment::Production,
-    )
+    )?)
 }
 
 #[derive(Debug)]
